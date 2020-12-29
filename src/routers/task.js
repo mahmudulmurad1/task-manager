@@ -27,51 +27,53 @@ router.patch('/tasks/:actionName', auth, async (req, res) => {
        minimumShippingPaidValue:req.query,
        owner: req.user._id
     })
-const pack= req.user.SubscriptionPackage
-console.log(pack)
-console.log(req.user)
+    const packID= await Subscription.findOne(req.user.SubscriptionPackage._id)
+    const uu= req.user
+    const pack= req.user.SubscriptionPackage.followBackUserLimit
+    console.log(pack) //undefined :(
+
     try {
-        if(task.actionName ==='followback' && pack.followBackUserLimit >= task.userLimit){
-            pack.followBackUserLimit -= task.userLimit
+        if(task.actionName === 'followBack' && pack.followBackUserLimit >= task.userLimit){
+            pack.followBackUserLimit = uu.pack.followBackUserLimit - task.userLimit
         }
-        if(task.actionName ==='followUsers' && pack.followUsersUserLimit >= task.userLimit){
+        else if(task.actionName === 'followUsers' && pack.followUsersUserLimit >= task.userLimit){
             pack.followUsersUserLimit -= task.userLimit
         }
-        if(task.actionName ==='shareUsersProduct' && pack.shareUsersProductItemLimit >= task.itemLimit){
+        else if(task.actionName ==='shareUsersProduct' && pack.shareUsersProductItemLimit >= task.itemLimit){
             pack.shareUsersProductItemLimit -= task.itemLimit
         }
-        if(task.actionName ==='shareBack' && pack.shareBackUserLimit>=task.UserLimit      
+        else if(task.actionName ==='shareBack' && pack.shareBackUserLimit>=task.UserLimit      
             && shareBackItemLimit>=itemLimit){
             pack.shareBackUserLimit -= task.userLimit 
             pack.shareBackItemLimit -= task.itemLimit
         }
-        if(task.actionName ==='shareMyCloset' && pack.shareMyClosetItemLimit>=task.itemLimit){
+        else if(task.actionName ==='shareMyCloset' && pack.shareMyClosetItemLimit>=task.itemLimit){
             pack.shareMyClosetItemLimit -= task.itemLimit
         }
-        if(task.actionName ==='offerToLikers' && !pack.offerToLikersShippingPaid && pack.offerToLikersItemLimit >= task.itemLimit){
+        else if(task.actionName ==='offerToLikers' && !pack.offerToLikersShippingPaid && pack.offerToLikersItemLimit >= task.itemLimit){
             pack.offerToLikersItemLimit -= task.itemLimit
             const cutoff = pack.offerToLikersDiscountPercentage
             
         }
-        if(task.actionName ==='offerToLikers' && pack.offerToLikersShippingPaid && pack.offerToLikersItemLimit >= task.itemLimit){
+        else if(task.actionName ==='offerToLikers' && pack.offerToLikersShippingPaid && pack.offerToLikersItemLimit >= task.itemLimit){
             pack.offerToLikersItemLimit -= task.itemLimit
             const cutoff = pack.offerToLikersDiscountPercentage
             const paid = pack.offerToLikersMinimumShippingValue
         }
-        if(task.actionName ==='clearOutOffers' && !pack.clearOutOffersShippingPaid && pack.clearOutOffersItemLimit >= task.itemLimit){
+        else if(task.actionName ==='clearOutOffers' && !pack.clearOutOffersShippingPaid && pack.clearOutOffersItemLimit >= task.itemLimit){
             pack.clearOutOffersItemLimit -= task.itemLimit
             const cutoff = pack.clearOutOffersDiscountPercentage
         }
-        if(task.actionName ==='clearOutOffers' && pack.clearOutOffersShippingPaid && pack.clearOutOffersItemLimit >= task.itemLimit){
+        else if(task.actionName ==='clearOutOffers' && pack.clearOutOffersShippingPaid && pack.clearOutOffersItemLimit >= task.itemLimit){
             pack.clearOutOffersItemLimit -= task.itemLimit
             const cutoff = pack.clearOutOffersDiscountPercentage
             const paid= pack.clearOutOffersMinimumShippingValue
         }
         else {
-            res.status(501).send('You may cross your limit.')
+            return  res.status(501).send('You may cross your limit')
         }
         await pack.save()
-        res.status(201).send(pack)
+        return res.status(201).send(pack)
     } catch (e) {
         res.status(400).send(e)
     }

@@ -39,11 +39,11 @@ const userSchema = new mongoose.Schema({
         default:null,
         ref: "Subscription"
     },
-    isAdmin:[{
+    isAdmin:{
         type: Boolean,
         default:false,
         required:true
-    }],
+    },
     tokens: [{
         token: {
             type: String,
