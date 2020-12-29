@@ -28,13 +28,12 @@ router.patch('/tasks/:actionName', auth, async (req, res) => {
        owner: req.user._id
     })
     const packID= await Subscription.findOne(req.user.SubscriptionPackage._id)
-    const uu= req.user
     const pack= req.user.SubscriptionPackage.followBackUserLimit
     console.log(pack) //undefined :(
 
     try {
         if(task.actionName === 'followBack' && pack.followBackUserLimit >= task.userLimit){
-            pack.followBackUserLimit = uu.pack.followBackUserLimit - task.userLimit
+           pack.followBackUserLimit -= task.userLimit
         }
         else if(task.actionName === 'followUsers' && pack.followUsersUserLimit >= task.userLimit){
             pack.followUsersUserLimit -= task.userLimit
@@ -75,7 +74,7 @@ router.patch('/tasks/:actionName', auth, async (req, res) => {
         await pack.save()
         return res.status(201).send(pack)
     } catch (e) {
-        res.status(400).send(e)
+        res.status(400).send('Somthing went wrong')
     }
 })
 
