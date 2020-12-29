@@ -68,7 +68,7 @@ console.log(req.user)
             const paid= pack.clearOutOffersMinimumShippingValue
         }
         else {
-            res.status(501).send('You may cross your limit')
+            res.status(501).send('You may cross your limit.')
         }
         await pack.save()
         res.status(201).send(pack)
