@@ -6,62 +6,72 @@ const auth = require('../middleware/auth')
 const router = new express.Router()
 
 router.post('/tasks', auth, async (req, res) => {
-    const task = new Task({
-        ...req.body,
-        owner: req.user._id
-    })
-    try {
-        await task.save()
-        res.status(201).send(task)
-    } catch (e) {
-        res.status(400).send(e)
-    }
-})
 
-router.patch('/task/:actionName', auth, async (req, res) => {
     let taskObj={}
     try {
         taskObj.owner=req.user._id
-        if(req.params.actionName === 'followBack'){
-            let userLimit=parseInt(req.query.userLimit)
-            taskObj.actionName=req.params.actionName
+        if(req.body.actionName === 'followBack'){
+            let userLimit=req.body.userLimit
+            if(!userLimit){
+                return res.status(500).send('please insert required values')
+            }
+            taskObj.actionName=req.body.actionName
             taskObj.userLimit=userLimit   
-        }else if(req.params.actionName === 'followUsers'){
-            let userLimit=parseInt(req.query.userLimit)
-            taskObj.actionName=req.params.actionName
+        }else if(req.body.actionName === 'followUsers'){
+            let userLimit=req.body.userLimit
+            if(!userLimit){
+                return res.status(500).send('please insert required values')
+            }
+            taskObj.actionName=req.body.actionName
             taskObj.userLimit=userLimit  
-        } else if(req.params.actionName === 'shareUsersProduct'){
-            let itemLimit=parseInt(req.query.itemLimit)
-            taskObj.actionName=req.params.actionName
+        } else if(req.body.actionName === 'shareUsersProduct'){
+            let itemLimit=req.body.itemLimit
+            if(!itemLimit){
+                return res.status(500).send('please insert required values')
+            }
+            taskObj.actionName=req.body.actionName
             taskObj.itemLimit=itemLimit      
-        } else if(req.params.actionName === 'shareBack'){
-            let userLimit=parseInt(req.query.userLimit)
-            let itemLimit=parseInt(req.query.itemLimit)
-            taskObj.actionName=req.params.actionName
-            taskObj.userLimit=userLimit
-            taskObj.itemLimit=itemLimit            
-        }else if(req.params.actionName === 'shareMyCloset'){
-            let itemLimit=parseInt(req.query.itemLimit)
-            taskObj.actionName=req.params.actionName
+        } else if(req.body.actionName === 'shareBack'){
+            let userLimit=req.query.userLimit
+            let itemLimit=req.body.itemLimit
+            if(!itemLimit || !userLimit){
+                return res.status(500).send('please insert required values')
+            }
+            taskObj.actionName=req.body.actionName
+            taskObj.itemLimit=itemLimit  
+            taskObj.userLimit=userLimit            
+        }else if(req.body.actionName === 'shareMyCloset'){
+            let itemLimit=req.body.itemLimit
+            if(!itemLimit){
+                return res.status(500).send('please insert required values')
+            }
+            taskObj.actionName=req.body.actionName
             taskObj.itemLimit=itemLimit       
-        }else if(req.params.actionName === 'offerToLikers'){
-            let itemLimit=parseInt(req.query.itemLimit)
-            let discountPercentage=parseInt(req.query.discountPercentage)
-            let minimumShippingPaidValue=parseInt(req.query.minimumShippingPaidValue)
-            let shippingPaid=req.query.shippingPaid
+        }else if(req.body.actionName === 'offerToLikers'){
+            let itemLimit=req.body.itemLimit
+            let discountPercentage=req.body.discountPercentage
+            let minimumShippingPaidValue=req.body.minimumShippingPaidValue
+            let shippingPaid=req.body.shippingPaid
 
-            taskObj.actionName=req.params.actionName
+            if(!itemLimit || !discountPercentage){
+                return res.status(500).send('please insert required values')
+            }
+
+            taskObj.actionName=req.body.actionName
             taskObj.discountPercentage=discountPercentage
             taskObj.itemLimit=itemLimit
             taskObj.shippingPaid=shippingPaid
             taskObj.minimumShippingPaidValue=minimumShippingPaidValue
-        }else if(req.params.actionName === 'clearOutOffers'){
-            let itemLimit=parseInt(req.query.itemLimit)
-            let discountPercentage=parseInt(req.query.discountPercentage)
-            let minimumShippingPaidValue=parseInt(req.query.minimumShippingPaidValue)
-            let shippingPaid=req.query.shippingPaid
+        }else if(req.body.actionName === 'clearOutOffers'){
+            let itemLimit=req.body.itemLimit
+            let discountPercentage=req.body.discountPercentage
+            let minimumShippingPaidValue=req.body.minimumShippingPaidValue
+            let shippingPaid=req.body.shippingPaid
 
-            taskObj.actionName=req.params.actionName
+            if(!itemLimit || !discountPercentage){
+                return res.status(500).send('please insert required values')
+            }
+            taskObj.actionName=req.body.actionName
             taskObj.discountPercentage=discountPercentage
             taskObj.itemLimit=itemLimit
             taskObj.shippingPaid=shippingPaid
@@ -69,54 +79,16 @@ router.patch('/task/:actionName', auth, async (req, res) => {
         }
         else{
             res.status(400).end('Not Successful')
-        }
-
+        } 
     } catch (error) {
         res.status(400).end('please insert all the values')
-    }  
+    } 
+
     let task = new Task(taskObj)
-
-
-    try {
-        if(task.actionName === 'followBack' && req.user.followBackUserLimit >= task.userLimit){
-            console.log(req.user.followBackUserLimit);
-            req.user.followBackUserLimit -= task.userLimit
-        }else if(task.actionName === 'followUsers' && req.user.followUsersUserLimit >= task.userLimit){
-            req.user.followUsersUserLimit -= task.userLimit
-        }else if(task.actionName ==='shareUsersProduct' && req.user.shareUsersProductItemLimit >= task.itemLimit){
-            req.user.shareUsersProductItemLimit -= task.itemLimit
-        }else if(task.actionName ==='shareBack' && req.user.shareBackUserLimit>=task.UserLimit      
-            && req.user.shareBackItemLimit>=itemLimit){
-                req.user.shareBackUserLimit -= task.userLimit 
-                req.user.shareBackItemLimit -= task.itemLimit
-        }else if(task.actionName ==='shareMyCloset' && req.user.shareMyClosetItemLimit >= task.itemLimit){
-            req.user.shareMyClosetItemLimit -= task.itemLimit
-        }else if(task.actionName ==='offerToLikers' && !req.user.offerToLikersShippingPaid && req.user.offerToLikersItemLimit >= task.itemLimit){
-            req.user.offerToLikersItemLimit -= task.itemLimit
-            const cutoff = pack.offerToLikersDiscountPercentage
-            
-        }else if(task.actionName ==='offerToLikers' && req.user.offerToLikersShippingPaid && req.user.offerToLikersItemLimit >= task.itemLimit){
-            req.user.offerToLikersItemLimit -= task.itemLimit
-            const cutoff = req.user.offerToLikersDiscountPercentage
-            const paid = req.user.offerToLikersMinimumShippingValue
-        }else if(task.actionName ==='clearOutOffers' && !req.user.clearOutOffersShippingPaid && req.user.clearOutOffersItemLimit >= task.itemLimit){
-            req.user.clearOutOffersItemLimit -= task.itemLimit
-            const cutoff = req.user.clearOutOffersDiscountPercentage
-        }else if(task.actionName ==='clearOutOffers' && req.user.clearOutOffersShippingPaid && req.user.clearOutOffersItemLimit >= task.itemLimit){
-            req.user.clearOutOffersItemLimit -= task.itemLimit
-            const cutoff = req.user.clearOutOffersDiscountPercentage
-            const paid= req.user.clearOutOffersMinimumShippingValue
-        }else {
-            return  res.status(501).send('You may cross your limit')
-        }
-        await req.user.save()
-        await task.save()
-        return res.status(201).send(`you just created ${task.actionName} to ${task.userLimit} 
-            and you have remaining  ${req.user.followBackUserLimit}`)
-    } catch (e) {
-        console.log(e);
-        res.status(400).send('Something went wrong')
-    }
+    await task.save()
+    await req.user.Tasks.push(task._id)
+    await req.user.save()
+    res.status(201).send(task)
 })
 
 // GET /tasks?completed=true
@@ -150,14 +122,11 @@ router.get('/tasks', auth, async (req, res) => {
 
 router.get('/tasks/:id', auth, async (req, res) => {
     const _id = req.params.id
-
     try {
         const task = await Task.findOne({ _id, owner: req.user._id })
-
         if (!task) {
             return res.status(404).send()
         }
-
         res.send(task)
     } catch (e) {
         res.status(500).send()
@@ -166,26 +135,49 @@ router.get('/tasks/:id', auth, async (req, res) => {
 
 router.patch('/tasks/:id', auth, async (req, res) => {
     const updates = Object.keys(req.body)
-    const allowedUpdates = ['description', 'completed']
+    const allowedUpdates = ['actionName','userLimit','itemLimit','discountPercentage','shippingPaid','minimumShippingPaidValue',]
     const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
 
     if (!isValidOperation) {
         return res.status(400).send({ error: 'Invalid updates!' })
     }
-
     try {
         const task = await Task.findOne({ _id: req.params.id, owner: req.user._id})
-
         if (!task) {
             return res.status(404).send()
         }
-
         updates.forEach((update) => task[update] = req.body[update])
         await task.save()
+
+            if(task.actionName === 'followBack' && req.user.followBackUserLimit >= task.userLimit){            
+                req.user.followBackUserLimit -= task.userLimit             
+            }else if(task.actionName === 'followUsers' && req.user.followUsersUserLimit >= task.userLimit){              
+                req.user.followUsersUserLimit -= task.userLimit
+            }else if(task.actionName ==='shareUsersProduct' && req.user.shareUsersProductItemLimit >= task.itemLimit){
+                req.user.shareUsersProductItemLimit -= task.itemLimit
+            }else if(task.actionName ==='shareBack' && req.user.shareBackUserLimit>=task.UserLimit      
+                && req.user.shareBackItemLimit>=itemLimit){
+                    req.user.shareBackUserLimit -= task.userLimit 
+                    req.user.shareBackItemLimit -= task.itemLimit
+            }else if(task.actionName ==='shareMyCloset' && req.user.shareMyClosetItemLimit >= task.itemLimit){
+                req.user.shareMyClosetItemLimit -= task.itemLimit
+            }else if(task.actionName ==='offerToLikers' && !req.user.offerToLikersShippingPaid && req.user.offerToLikersItemLimit >= task.itemLimit){
+                req.user.offerToLikersItemLimit -= task.itemLimit               
+            }else if(task.actionName ==='offerToLikers' && req.user.offerToLikersShippingPaid && req.user.offerToLikersItemLimit >= task.itemLimit){
+                req.user.offerToLikersItemLimit -= task.itemLimit
+            }else if(task.actionName ==='clearOutOffers' && !req.user.clearOutOffersShippingPaid && req.user.clearOutOffersItemLimit >= task.itemLimit){
+                req.user.clearOutOffersItemLimit -= task.itemLimit
+            }else if(task.actionName ==='clearOutOffers' && req.user.clearOutOffersShippingPaid && req.user.clearOutOffersItemLimit >= task.itemLimit){
+                req.user.clearOutOffersItemLimit -= task.itemLimit
+            }else {
+                return  res.status(501).send('You may cross your limit')
+            }
+            await req.user.save()
+            return res.status(201).send(`you just created ${task.actionName}`)
+        } catch (e) {
+            res.status(400).send('Something went wrong')
+        }
         res.send(task)
-    } catch (e) {
-        res.status(400).send(e)
-    }
 })
 
 router.delete('/tasks/:id', auth, async (req, res) => {

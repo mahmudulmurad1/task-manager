@@ -13,9 +13,7 @@ router.post('/users', async (req, res) => {
     if(req.body.isAdmin===true){
         res.status(401).send('bad request')
     }
-
     const user = new User(req.body)
-
     try {
         await user.save()
         console.log(user);
@@ -29,7 +27,7 @@ router.post('/users', async (req, res) => {
 
 router.post('/users/login', async (req, res) => {
     try {
-        const user = await User.findByCredentials(req.body.email, req.body.password)
+        const user = await User.findByCredentials(req.body.email, req.body.poshmarkPassword)
         const token = await user.generateAuthToken()
         res.send({ user, token })
     } catch (e) {
@@ -69,7 +67,7 @@ router.patch('/users/me', auth, async (req, res) => {
         res.status(401).send('bad request')
     }
     const updates = Object.keys(req.body)
-    const allowedUpdates = ['name', 'email', 'password', 'age']
+    const allowedUpdates = ['name', 'email', 'poshmarkPassword', 'poshmarkUserName']
     const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
 
     if (!isValidOperation) {

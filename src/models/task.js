@@ -7,21 +7,17 @@ const taskSchema = new mongoose.Schema({
         type: String,
     },
     userLimit: {
-       type:Number,
-      
+       type:Number,      
     },
     itemLimit:{
-        type:Number,
-       
+        type:Number,       
     },
     discountPercentage:{
-        type:Number,
-        
+        type:Number,       
     },
     shippingPaid:{
         type:Boolean,    
-    }
-    ,
+    },
     minimumShippingPaidValue:{
         type:Number,     
     },
