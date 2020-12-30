@@ -95,27 +95,10 @@ router.delete('/users/me', auth, async (req, res) => {
     }
 })
 
-router.get('/user/subscriptions',  async (req, res) => {
-    const match = {}
-    const sort = {}
-    if (req.body.SubscriptionPackage) {
-        match.SubscriptionPackage = req.body.SubscriptionPackage
-    }
-    if (req.body.sortBy) {
-        const parts = req.body.sortBy.split(':')
-        sort[parts[0]] = parts[1] === 'desc' ? -1 : 1
-    }
+router.get('/user/Mysubscription', auth,  async (req, res) => {
     try {
-        await req.user.populate({
-            path: 'user/subscription',
-            match
-            // options: {
-            //     limit: parseInt(req.query.limit),
-            //     skip: parseInt(req.query.skip),
-            //     sort
-            // }
-        }).execPopulate()
-        res.send(req.user.subscription)
+          const packID= await Subscription.findOne(req.user.SubscriptionPackage._id)
+        res.status(201).send(packID)
     } catch (e) {
         res.status(500).send('not working')
     }

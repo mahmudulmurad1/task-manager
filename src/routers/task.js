@@ -1,7 +1,7 @@
 const express = require('express')
 const Task = require('../models/task')
 const Subscription = require('../models/subscription')
-const User = require('./user')
+const User = require('../models/user')
 const auth = require('../middleware/auth')
 const router = new express.Router()
 
@@ -19,6 +19,7 @@ router.post('/tasks', auth, async (req, res) => {
 })
 
 router.patch('/tasks/:actionName', auth, async (req, res) => {
+
     const task = new Task({
        actionName:req.params.actionName,
        userLimit:req.query,
@@ -28,8 +29,8 @@ router.patch('/tasks/:actionName', auth, async (req, res) => {
        owner: req.user._id
     })
     const packID= await Subscription.findOne(req.user.SubscriptionPackage._id)
-    const pack= req.user.SubscriptionPackage.followBackUserLimit
-    console.log(pack) //undefined :(
+    console.log(packID.followBackUserLimit)
+    const pack= req.user.SubscriptionPackage
 
     try {
         if(task.actionName === 'followBack' && pack.followBackUserLimit >= task.userLimit){
@@ -74,7 +75,7 @@ router.patch('/tasks/:actionName', auth, async (req, res) => {
         await pack.save()
         return res.status(201).send(pack)
     } catch (e) {
-        res.status(400).send('Somthing went wrong')
+        res.status(400).send('Something went wrong')
     }
 })
 
