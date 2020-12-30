@@ -104,16 +104,28 @@ router.patch('/buyMySubscription', auth ,async(req,res) =>{
         return res.status(400).send({ error: 'Invalid updates!' })
     }  
         try {
-            const sub = await Subscription.findOne({ name: req.body.name})
-            if(!sub) {
+            const packID = await Subscription.findOne({ name: req.body.name})
+            if(!packID) {
                 return res.status(404).send('Not Found')
             }
-            
             //payment middeleware will be here
-
-            req.user.SubscriptionPackage=sub
-            await sub.save()
+            req.user.SubscriptionPackage=packID
+            req.user.followBackUserLimit=packID.followBackUserLimit
+            req.user.followUsersUserLimit=packID.followUsersUserLimit
+            req.user.shareUsersProductItemLimit=packID.shareUsersProductItemLimit
+            req.user.shareBackUserLimit=packID.shareBackUserLimit
+            req.user.shareBackItemLimit=packID.shareBackItemLimit
+            req.user.shareMyClosetItemLimit=packID.shareMyClosetItemLimit
+            req.user.offerToLikersDiscountPercentage=packID.offerToLikersDiscountPercentage
+            req.user.offerToLikersItemLimit=packID.offerToLikersItemLimit
+            req.user.offerToLikersShippingPaid=packID.offerToLikersShippingPaid
+            req.user.offerToLikersMinimumShippingValue=packID.offerToLikersMinimumShippingValue
+            req.user.clearOutOffersItemLimit=packID.clearOutOffersItemLimit
+            req.user.clearOutOffersDiscountPercentage=packID.clearOutOffersDiscountPercentage
+            req.user.clearOutOffersShippingPaid=packID.clearOutOffersShippingPaid
+            req.user.clearOutOffersMinimumShippingValue=packID.clearOutOffersMinimumShippingValue
             await req.user.save()
+            console.log(typeof req.user.followBackUserLimit)
             res.send(req.user)
         } catch (e) {
             res.status(400).send('error')

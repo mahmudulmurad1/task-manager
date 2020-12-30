@@ -18,63 +18,103 @@ router.post('/tasks', auth, async (req, res) => {
     }
 })
 
-router.patch('/tasks/:actionName', auth, async (req, res) => {
+router.patch('/task/:actionName', auth, async (req, res) => {
+    let taskObj={}
+    try {
+        taskObj.owner=req.user._id
+        if(req.params.actionName === 'followBack'){
+            let userLimit=parseInt(req.query.userLimit)
+            taskObj.actionName=req.params.actionName
+            taskObj.userLimit=userLimit   
+        }else if(req.params.actionName === 'followUsers'){
+            let userLimit=parseInt(req.query.userLimit)
+            taskObj.actionName=req.params.actionName
+            taskObj.userLimit=userLimit  
+        } else if(req.params.actionName === 'shareUsersProduct'){
+            let itemLimit=parseInt(req.query.itemLimit)
+            taskObj.actionName=req.params.actionName
+            taskObj.itemLimit=itemLimit      
+        } else if(req.params.actionName === 'shareBack'){
+            let userLimit=parseInt(req.query.userLimit)
+            let itemLimit=parseInt(req.query.itemLimit)
+            taskObj.actionName=req.params.actionName
+            taskObj.userLimit=userLimit
+            taskObj.itemLimit=itemLimit            
+        }else if(req.params.actionName === 'shareMyCloset'){
+            let itemLimit=parseInt(req.query.itemLimit)
+            taskObj.actionName=req.params.actionName
+            taskObj.itemLimit=itemLimit       
+        }else if(req.params.actionName === 'offerToLikers'){
+            let itemLimit=parseInt(req.query.itemLimit)
+            let discountPercentage=parseInt(req.query.discountPercentage)
+            let minimumShippingPaidValue=parseInt(req.query.minimumShippingPaidValue)
+            let shippingPaid=req.query.shippingPaid
 
-    const task = new Task({
-       actionName:req.params.actionName,
-       userLimit:req.query,
-       itemLimit:req.query,
-       discountPercentage:req.query,
-       minimumShippingPaidValue:req.query,
-       owner: req.user._id
-    })
-    const packID= await Subscription.findOne(req.user.SubscriptionPackage._id)
-    console.log(packID.followBackUserLimit)
-    const pack= req.user.SubscriptionPackage
+            taskObj.actionName=req.params.actionName
+            taskObj.discountPercentage=discountPercentage
+            taskObj.itemLimit=itemLimit
+            taskObj.shippingPaid=shippingPaid
+            taskObj.minimumShippingPaidValue=minimumShippingPaidValue
+        }else if(req.params.actionName === 'clearOutOffers'){
+            let itemLimit=parseInt(req.query.itemLimit)
+            let discountPercentage=parseInt(req.query.discountPercentage)
+            let minimumShippingPaidValue=parseInt(req.query.minimumShippingPaidValue)
+            let shippingPaid=req.query.shippingPaid
+
+            taskObj.actionName=req.params.actionName
+            taskObj.discountPercentage=discountPercentage
+            taskObj.itemLimit=itemLimit
+            taskObj.shippingPaid=shippingPaid
+            taskObj.minimumShippingPaidValue=minimumShippingPaidValue
+        }
+        else{
+            res.status(400).end('Not Successful')
+        }
+
+    } catch (error) {
+        res.status(400).end('please insert all the values')
+    }  
+    let task = new Task(taskObj)
+
 
     try {
-        if(task.actionName === 'followBack' && pack.followBackUserLimit >= task.userLimit){
-           pack.followBackUserLimit -= task.userLimit
-        }
-        else if(task.actionName === 'followUsers' && pack.followUsersUserLimit >= task.userLimit){
-            pack.followUsersUserLimit -= task.userLimit
-        }
-        else if(task.actionName ==='shareUsersProduct' && pack.shareUsersProductItemLimit >= task.itemLimit){
-            pack.shareUsersProductItemLimit -= task.itemLimit
-        }
-        else if(task.actionName ==='shareBack' && pack.shareBackUserLimit>=task.UserLimit      
-            && shareBackItemLimit>=itemLimit){
-            pack.shareBackUserLimit -= task.userLimit 
-            pack.shareBackItemLimit -= task.itemLimit
-        }
-        else if(task.actionName ==='shareMyCloset' && pack.shareMyClosetItemLimit>=task.itemLimit){
-            pack.shareMyClosetItemLimit -= task.itemLimit
-        }
-        else if(task.actionName ==='offerToLikers' && !pack.offerToLikersShippingPaid && pack.offerToLikersItemLimit >= task.itemLimit){
-            pack.offerToLikersItemLimit -= task.itemLimit
+        if(task.actionName === 'followBack' && req.user.followBackUserLimit >= task.userLimit){
+            console.log(req.user.followBackUserLimit);
+            req.user.followBackUserLimit -= task.userLimit
+        }else if(task.actionName === 'followUsers' && req.user.followUsersUserLimit >= task.userLimit){
+            req.user.followUsersUserLimit -= task.userLimit
+        }else if(task.actionName ==='shareUsersProduct' && req.user.shareUsersProductItemLimit >= task.itemLimit){
+            req.user.shareUsersProductItemLimit -= task.itemLimit
+        }else if(task.actionName ==='shareBack' && req.user.shareBackUserLimit>=task.UserLimit      
+            && req.user.shareBackItemLimit>=itemLimit){
+                req.user.shareBackUserLimit -= task.userLimit 
+                req.user.shareBackItemLimit -= task.itemLimit
+        }else if(task.actionName ==='shareMyCloset' && req.user.shareMyClosetItemLimit >= task.itemLimit){
+            req.user.shareMyClosetItemLimit -= task.itemLimit
+        }else if(task.actionName ==='offerToLikers' && !req.user.offerToLikersShippingPaid && req.user.offerToLikersItemLimit >= task.itemLimit){
+            req.user.offerToLikersItemLimit -= task.itemLimit
             const cutoff = pack.offerToLikersDiscountPercentage
             
-        }
-        else if(task.actionName ==='offerToLikers' && pack.offerToLikersShippingPaid && pack.offerToLikersItemLimit >= task.itemLimit){
-            pack.offerToLikersItemLimit -= task.itemLimit
-            const cutoff = pack.offerToLikersDiscountPercentage
-            const paid = pack.offerToLikersMinimumShippingValue
-        }
-        else if(task.actionName ==='clearOutOffers' && !pack.clearOutOffersShippingPaid && pack.clearOutOffersItemLimit >= task.itemLimit){
-            pack.clearOutOffersItemLimit -= task.itemLimit
-            const cutoff = pack.clearOutOffersDiscountPercentage
-        }
-        else if(task.actionName ==='clearOutOffers' && pack.clearOutOffersShippingPaid && pack.clearOutOffersItemLimit >= task.itemLimit){
-            pack.clearOutOffersItemLimit -= task.itemLimit
-            const cutoff = pack.clearOutOffersDiscountPercentage
-            const paid= pack.clearOutOffersMinimumShippingValue
-        }
-        else {
+        }else if(task.actionName ==='offerToLikers' && req.user.offerToLikersShippingPaid && req.user.offerToLikersItemLimit >= task.itemLimit){
+            req.user.offerToLikersItemLimit -= task.itemLimit
+            const cutoff = req.user.offerToLikersDiscountPercentage
+            const paid = req.user.offerToLikersMinimumShippingValue
+        }else if(task.actionName ==='clearOutOffers' && !req.user.clearOutOffersShippingPaid && req.user.clearOutOffersItemLimit >= task.itemLimit){
+            req.user.clearOutOffersItemLimit -= task.itemLimit
+            const cutoff = req.user.clearOutOffersDiscountPercentage
+        }else if(task.actionName ==='clearOutOffers' && req.user.clearOutOffersShippingPaid && req.user.clearOutOffersItemLimit >= task.itemLimit){
+            req.user.clearOutOffersItemLimit -= task.itemLimit
+            const cutoff = req.user.clearOutOffersDiscountPercentage
+            const paid= req.user.clearOutOffersMinimumShippingValue
+        }else {
             return  res.status(501).send('You may cross your limit')
         }
-        await pack.save()
-        return res.status(201).send(pack)
+        await req.user.save()
+        await task.save()
+        return res.status(201).send(`you just created ${task.actionName} to ${task.userLimit} 
+            and you have remaining  ${req.user.followBackUserLimit}`)
     } catch (e) {
+        console.log(e);
         res.status(400).send('Something went wrong')
     }
 })

@@ -5,23 +5,25 @@ const User = require('./user')
 const taskSchema = new mongoose.Schema({
     actionName: {
         type: String,
-        required: true,
     },
     userLimit: {
        type:Number,
-       required:true,
+      
     },
     itemLimit:{
         type:Number,
-        required:true,
+       
     },
     discountPercentage:{
         type:Number,
-        required:true,
+        
     },
+    shippingPaid:{
+        type:Boolean,    
+    }
+    ,
     minimumShippingPaidValue:{
-        type:Number,
-        required:true,
+        type:Number,     
     },
     owner: {
         type: mongoose.Schema.Types.ObjectId,
